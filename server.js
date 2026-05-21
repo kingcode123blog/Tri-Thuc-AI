@@ -40,5 +40,3 @@ app.post('/api/export-docx', (req, res) => {
         });
     });
 });
-
-app.listen(3000, () => console.log('Server Pandoc đang chạy ở cổng 3000'));
