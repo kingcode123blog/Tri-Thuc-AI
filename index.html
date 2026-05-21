@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Xuất Đề Thi Qua Pandoc</title>
+    <!-- Thêm thư viện CSS Tailwind để giao diện nhìn đẹp hơn (Tùy chọn) -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-100 p-8">
+
+    <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h1 class="text-2xl font-bold text-gray-800 mb-4">Giao diện Xuất Đề Thi</h1>
+        
+        <!-- Khu vực hiển thị trạng thái xử lý -->
+        <div id="statusArea" class="mb-4 text-sm text-gray-600 font-medium">
+            ⚪ Sẵn sàng.
+        </div>
+
+        <!-- Nút bấm để kích hoạt hàm handleExport -->
+        <button 
+            onclick="handleExport()" 
+            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded shadow transition"
+        >
+            📄 Xuất file Word (Qua Pandoc)
+        </button>
+    </div>
+
+    <!-- Đoạn JavaScript xử lý -->
+    <script>
+        // Giả lập dữ liệu đề thi có chứa công thức toán học dạng LaTeX mà AI trả về
+        // Trong dự án thật của bạn, biến này đã có sẵn dữ liệu rồi.
+        const currentAIContent = `
+## ĐỀ THI TRẮC NGHIỆM TOÁN HỌC
+### Câu 1: Tính đạo hàm
+Cho hàm số $y = x^2 + 2x$. Tính đạo hàm bậc nhất của hàm số tại $x = 1$.
+
+### Câu 2: Công thức tích phân
+Tính tích phân sau đây:
+$$\\int_{0}^{1} x^2 \\, dx$$
+        `;
+
+        // Hàm handleExport bạn cần dùng
+        async function handleExport() {
+            if (!currentAIContent) {
+                alert("Chưa có nội dung đề thi để xuất!");
+                return;
+            }
+
+            const statusArea = document.getElementById('statusArea');
+            statusArea.innerText = "⏳ Đang gửi dữ liệu lên server Pandoc...";
+
+            try {
+                // LƯU Ý CHỖ NÀY: Thay URL này bằng đường dẫn đến server Node.js backend thật của bạn
+                // Ví dụ nếu chạy local thì thường là: http://localhost:3000/api/export-docx
+                const response = await fetch('http://localhost:3000/api/export-docx', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ markdown: currentAIContent })
+                });
+
+                if (!response.ok) {
+                    throw new Error("Không thể kết nối với server Pandoc hoặc server bị lỗi.");
+                }
+
+                statusArea.innerText = "⏳ Đang chuẩn bị tải file về...";
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'De_Thi_AI.docx';
+                link.click();
+                
+                URL.revokeObjectURL(url);
+
+                statusArea.innerHTML = `<span class="text-green-600">✅ Xuất file Word qua Pandoc thành công!</span>`;
+            } catch (error) {
+                console.error(error);
+                statusArea.innerHTML = `<span class="text-red-600">❌ Lỗi: ${error.message}</span>`;
+            }
+        }
+    </script>
+</body>
+</html>
