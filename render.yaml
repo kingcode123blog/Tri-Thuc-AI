@@ -3,4 +3,3 @@ services:
     name: pandoc-export-server
     env: docker
     plan: free
-    startCommand: node server.js
