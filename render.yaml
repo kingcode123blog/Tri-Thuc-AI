@@ -1,7 +1,6 @@
 services:
   - type: web
     name: pandoc-export-server
-    env: node
+    env: docker
     plan: free
-    buildCommand: apt-get update && apt-get install -y pandoc && npm install
     startCommand: node server.js
