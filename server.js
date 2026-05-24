@@ -75,14 +75,14 @@ app.post('/api/export-docx', (req, res) => {
     if (!markdown) return res.status(400).send("Thiếu nội dung Markdown");
 
     const id = Date.now();
-    const mdPath = path.join(uploadDir, `temp_${id}.md`);
+    const mdPath = path.join(uploadDir, `temp_${id}.html`);
     const docxPath = path.join(uploadDir, `De_Thi_AI_${id}.docx`);
 
     // 1. Ghi nội dung thô vào file markdown tạm
     fs.writeFileSync(mdPath, markdown, 'utf-8');
 
     // 2. Chạy lệnh Pandoc chuyển đổi sang docx
-    const pandocCmd = `pandoc "${mdPath}" -f markdown -t docx -o "${docxPath}"`;
+    const pandocCmd = `pandoc "${mdPath}" -f html -t docx -o "${docxPath}"`;
 
     exec(pandocCmd, (error, stdout, stderr) => {
         if (error) {
