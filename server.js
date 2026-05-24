@@ -102,6 +102,44 @@ app.post('/api/export-docx', (req, res) => {
         });
     });
 });
+// ==========================================
+// API 3: XUẤT HTML RA WORD BẰNG PANDOC
+// ==========================================
+app.post('/api/export-docx-from-html', (req, res) => {
+    const { html } = req.body;
+    if (!html) return res.status(400).send("Thiếu nội dung HTML");
+
+    const id = Date.now();
+    // Tạo file tạm với đuôi .html
+    const htmlPath = path.join(uploadDir, `temp_${id}.html`);
+    const docxPath = path.join(uploadDir, `Tai_Lieu_HTML_${id}.docx`);
+
+    // 1. Ghi nội dung HTML vào file tạm
+    fs.writeFileSync(htmlPath, html, 'utf-8');
+
+    // 2. Chạy lệnh Pandoc chuyển đổi từ html (-f html) sang docx
+    const pandocCmd = `pandoc "${htmlPath}" -f html -t docx -o "${docxPath}"`;
+
+    exec(pandocCmd, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Lỗi thực thi Pandoc: ${error.message}`);
+            // Xóa file tạm nếu có lỗi
+            if (fs.existsSync(htmlPath)) fs.unlinkSync(htmlPath);
+            return res.status(500).send("Lỗi trong quá trình chuyển đổi HTML sang DOCX.");
+        }
+
+        // 3. Gửi file .docx về cho client
+        res.download(docxPath, `Tai_Lieu_${id}.docx`, (err) => {
+            // Xóa các file tạm sau khi gửi xong
+            try {
+                if (fs.existsSync(htmlPath)) fs.unlinkSync(htmlPath);
+                if (fs.existsSync(docxPath)) fs.unlinkSync(docxPath);
+            } catch (e) {
+                console.error("Lỗi xóa file tạm:", e);
+            }
+        });
+    });
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server kết hợp đang chạy ở cổng ${PORT}`));
