@@ -1,5 +1,5 @@
 # Sử dụng môi trường Node.js có sẵn trên Linux
-FROM node:20-slim
+FROM node:24-slim
 
 # Cài đặt Pandoc trực tiếp vào hệ thống của Docker
 RUN apt-get update && apt-get install -y pandoc && rm -rf /var/lib/apt/lists/*
