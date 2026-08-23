@@ -13,7 +13,11 @@ const Tesseract = require('tesseract.js');
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: '*', // Cho phép tất cả các nguồn truy cập (hoặc thay '*' bằng 'https://kingcode123blog.github.io')
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json()); // Cần thiết để đọc JSON body từ Frontend gửi lên (cho phần Pandoc)
 
 // Đảm bảo thư mục lưu file tạm tồn tại
