@@ -75,25 +75,44 @@ app.post('/extract-text', upload.single('file'), async (req, res) => {
 // API 2: XUẤT TEXT/MARKDOWN RA WORD BẰNG PANDOC
 // ==========================================
 app.post('/api/export-docx', (req, res) => {
-    const { markdown } = req.body;
+    let { markdown, isBase64 } = req.body;
     if (!markdown) return res.status(400).send("Thiếu nội dung Markdown");
+
+    // 1. Tự động decode nếu Frontend gửi dạng Base64
+    if (isBase64) {
+        try {
+            markdown = Buffer.from(markdown, 'base64').toString('utf-8');
+        } catch (e) {
+            console.error("Lỗi Decode Base64:", e);
+            return res.status(400).send("Dữ liệu Base64 không hợp lệ");
+        }
+    }
+
+    // 2. Đảm bảo thư mục lưu file tạm đã tồn tại
+    if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
     const id = Date.now();
     const mdPath = path.join(uploadDir, `temp_${id}.md`);
     const docxPath = path.join(uploadDir, `De_Thi_AI_${id}.docx`);
 
-    // 1. Ghi nội dung thô vào file markdown tạm
+    // 3. Ghi nội dung vào file markdown tạm
     fs.writeFileSync(mdPath, markdown, 'utf-8');
 
-    // 2. Chạy lệnh Pandoc chuyển đổi sang docx
-    const pandocCmd = `pandoc "${mdPath}" -f markdown -t docx -o "${docxPath}"`;
+    // 4. Chạy lệnh Pandoc (Thêm cờ +tex_math_dollars để hỗ trợ công thức toán nếu có)
+    const pandocCmd = `pandoc "${mdPath}" -f markdown+tex_math_dollars -t docx -o "${docxPath}"`;
 
     exec(pandocCmd, (error, stdout, stderr) => {
         if (error) {
             console.error(`Lỗi thực thi Pandoc: ${error.message}`);
+            console.error(`Stderr: ${stderr}`);
+            // Xóa file md tạm nếu Pandoc bị lỗi
+            if (fs.existsSync(mdPath)) fs.unlinkSync(mdPath);
             return res.status(500).send("Lỗi trong quá trình xử lý Pandoc.");
         }
 
-        // 3. Gửi file .docx về cho client tải xuống
+        // 5. Gửi file .docx về cho client tải xuống
         res.download(docxPath, `Tai_Lieu_${id}.docx`, (err) => {
             // Xóa các file tạm sau khi gửi xong
             try {
