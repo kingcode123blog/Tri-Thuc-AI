@@ -72,7 +72,6 @@ app.post('/extract-text', upload.single('file'), async (req, res) => {
 // ==========================================
 app.post('/api/export-docx', (req, res) => {
     const { markdown } = req.body;
-    if (!markdown) return res.status(400).send("Thiếu nội dung Markdown");
 
     const id = Date.now();
     const mdPath = path.join(uploadDir, `temp_${id}.md`);
